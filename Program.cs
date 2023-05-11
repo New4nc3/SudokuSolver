@@ -1,10 +1,15 @@
-﻿namespace SudokuSolver
+﻿using InputOutput;
+
+namespace SudokuSolver
 {
     class Program
     {
         public static void Main(string[] args)
         {
-            Solver solver = new Solver("hard2.txt", "hard2_out.txt");
+            var input = "hard1.txt";
+            var output = "hard1_out.txt";
+
+            Solver solver = new Solver(input.GenerateInputFilePath(), output.GenerateOutputFilePath());
             solver.Solve();
         }
     }

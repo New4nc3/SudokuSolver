@@ -2,6 +2,9 @@ namespace InputOutput
 {
     static class FileManager
     {
+        public const string InputFolderName = "input";
+        public const string OutputFolderName = "output";
+
         public static string[] ReadDataFromFile(string inputFileName)
         {
             using (var streamReader = new StreamReader(inputFileName))
@@ -22,5 +25,11 @@ namespace InputOutput
                 return false;
             }
         }
+
+        public static string GenerateInputFilePath(this string inputFileName) =>
+            Path.Combine(InputFolderName, inputFileName);
+
+        public static string GenerateOutputFilePath(this string outputFileName) =>
+            Path.Combine(OutputFolderName, outputFileName);
     }
 }

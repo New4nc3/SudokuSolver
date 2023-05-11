@@ -148,8 +148,8 @@ namespace SudokuSolver
 
             var unresolvedCells = cellsToCheck.Where(x => !x.IsSolved);
 
-            var allUniqueCandidates = unresolvedCells.SelectMany(x => x.GetCandidates, (x, candidates) => new { x, candidates })
-                .GroupBy(x => x.candidates)
+            var allUniqueCandidates = unresolvedCells.SelectMany(x => x.GetCandidates)
+                .GroupBy(x => x)
                 .Select(group => new { Key = group.Key, Count = group.Count() })
                 .Where(x => x.Count == 1)
                 .ToList();
