@@ -2,8 +2,10 @@ namespace InputOutput
 {
     static class FileManager
     {
-        public const string InputFolderName = "input";
-        public const string OutputFolderName = "output";
+        private const string InputFolderName = "input";
+        private const string OutputFolderName = "output";
+        private const string OutSuffix = "_out";
+        private const string TxtExt = ".txt";
 
         public static string[] ReadDataFromFile(string inputFileName)
         {
@@ -26,10 +28,10 @@ namespace InputOutput
             }
         }
 
-        public static string GenerateInputFilePath(this string inputFileName) =>
-            Path.Combine(InputFolderName, inputFileName);
+        public static string GenerateInputFilePath(string inputFileName) =>
+            Path.Combine(InputFolderName, $"{inputFileName}{TxtExt}");
 
-        public static string GenerateOutputFilePath(this string outputFileName) =>
-            Path.Combine(OutputFolderName, outputFileName);
+        public static string GenerateOutputFilePath(string outputFileName) =>
+            Path.Combine(OutputFolderName, $"{outputFileName}{OutSuffix}{TxtExt}");
     }
 }

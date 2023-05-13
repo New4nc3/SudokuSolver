@@ -7,8 +7,8 @@ namespace SudokuSolver
     {
         private const int RowsColsCount = 9;
 
-        private readonly string _inputFileName;
-        private readonly string _outputFileName;
+        private readonly string _inputFilePath;
+        private readonly string _outputFilePath;
 
         private readonly string[] _rawData;
 
@@ -19,17 +19,17 @@ namespace SudokuSolver
 
         private readonly StringBuilder _stringBuilder = new StringBuilder();
 
-        public Solver(string inputFileName, string outputFileName)
+        public Solver(string inputFileNameWithoutExtension, string? outputFileName = null)
         {
-            _inputFileName = inputFileName;
-            _outputFileName = outputFileName;
+            _inputFilePath = FileManager.GenerateInputFilePath(inputFileNameWithoutExtension);
+            _outputFilePath = outputFileName ?? FileManager.GenerateOutputFilePath(inputFileNameWithoutExtension);
 
             _rows = new List<Cell[]>(RowsColsCount);
             _cols = new List<Cell[]>(RowsColsCount);
             _grids3x3 = new List<Cell[]>(RowsColsCount);
             _fullGrid = new Cell[RowsColsCount, RowsColsCount];
 
-            _rawData = FileManager.ReadDataFromFile(_inputFileName);
+            _rawData = FileManager.ReadDataFromFile(_inputFilePath);
 
             Initialize();
         }
@@ -120,9 +120,9 @@ namespace SudokuSolver
                 Console.WriteLine($"Sucessfully solved in {iterationsCount} moves!");
             }
 
-            if (FileManager.WriteDataToFile(_outputFileName, this.ToString()))
+            if (FileManager.WriteDataToFile(_outputFilePath, this.ToString()))
             {
-                Console.WriteLine($"Successfully saved to \"{_outputFileName}\"");
+                Console.WriteLine($"Successfully saved to \"{_outputFilePath}\"");
             }
 
             Console.WriteLine("\nPress any key to exit . . .");
