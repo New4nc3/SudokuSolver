@@ -6,8 +6,8 @@ namespace SudokuSolver
     {
         public static void Main(string[] args)
         {
-            var input = "hard1.txt";
-            var output = "hard1_out.txt";
+            var input = "hard2.txt";
+            var output = "hard2_out.txt";
 
             Solver solver = new Solver(input.GenerateInputFilePath(), output.GenerateOutputFilePath());
             solver.Solve();

@@ -9,7 +9,7 @@ namespace SudokuSolver
 
         private readonly string _inputFileName;
         private readonly string _outputFileName;
-        
+
         private readonly string[] _rawData;
 
         private readonly List<Cell[]> _rows;
@@ -98,8 +98,8 @@ namespace SudokuSolver
 
                 _rows.ForEach(x => CheckAndRemoveCandidates(x));
                 _cols.ForEach(x => CheckAndRemoveCandidates(x));
-                _grids3x3.ForEach(x => 
-                { 
+                _grids3x3.ForEach(x =>
+                {
                     CheckAndRemoveCandidates(x);
                     CheckForUniqueCandidate(x);
                 });
@@ -146,7 +146,7 @@ namespace SudokuSolver
             if (cellsToCheck.All(x => x.IsSolved))
                 return;
 
-            var unresolvedCells = cellsToCheck.Where(x => !x.IsSolved);
+            var unresolvedCells = cellsToCheck.Where(x => !x.IsSolved).ToList();
 
             var allUniqueCandidates = unresolvedCells.SelectMany(x => x.GetCandidates)
                 .GroupBy(x => x)
@@ -154,11 +154,45 @@ namespace SudokuSolver
                 .Where(x => x.Count == 1)
                 .ToList();
 
-            foreach (var uniqueCandidate in allUniqueCandidates)
+            var count = allUniqueCandidates.Count;
+
+            if (count == 0)
+                return;
+
+            if (count == 1)
             {
+                var uniqueCandidate = allUniqueCandidates.First();
                 var valueToSet = uniqueCandidate.Key;
                 var cellToSet = unresolvedCells.First(x => x.GetCandidates.Contains(valueToSet));
+
                 cellToSet.SetUniqueCandidate(valueToSet);
+            }
+            else
+            {
+                var cellsWithCandidates = new Dictionary<Cell, List<byte>>();
+
+                foreach (var uniqueCandidate in allUniqueCandidates)
+                {
+                    var candidate = uniqueCandidate.Key;
+                    var cell = unresolvedCells.First(x => x.GetCandidates.Contains(candidate));
+
+                    if (!cellsWithCandidates.ContainsKey(cell))
+                        cellsWithCandidates.Add(cell, new List<byte>() { candidate });
+                    else
+                        cellsWithCandidates[cell].Add(candidate);
+                }
+
+                foreach (var cellWithUniqueCandidates in cellsWithCandidates)
+                {
+                    var candidates = cellWithUniqueCandidates.Value;
+
+                    if (candidates.Count > 1)
+                        continue;
+
+                    var uniqueCandidate = candidates.First();
+                    var cellToSet = cellWithUniqueCandidates.Key;
+                    cellToSet.SetUniqueCandidate(uniqueCandidate);
+                }
             }
         }
 
