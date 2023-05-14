@@ -91,10 +91,11 @@ namespace SudokuSolver
         public void Solve()
         {
             int iterationsCount = 0;
+            int unresolvedCount, tempUnresolvedCount;
 
             do
             {
-                Cell.ResetCellChanged();
+                unresolvedCount = GetUnresolvedCount();
 
                 _rows.ForEach(x => CheckAndRemoveCandidates(x));
                 _cols.ForEach(x => CheckAndRemoveCandidates(x));
@@ -107,13 +108,15 @@ namespace SudokuSolver
                 ++iterationsCount;
 
                 Console.WriteLine(this);
-            }
-            while (Cell.CellChanged);
 
-            var unresolvedCellsCount = GetUnresolvedCount();
-            if (unresolvedCellsCount > 0)
+                tempUnresolvedCount = GetUnresolvedCount();
+            }
+            while (tempUnresolvedCount > 0 && tempUnresolvedCount != unresolvedCount);
+
+            unresolvedCount = GetUnresolvedCount();
+            if (unresolvedCount > 0)
             {
-                Console.WriteLine($"Finished. Unresolved: {unresolvedCellsCount}. Iterations count: {iterationsCount}");
+                Console.WriteLine($"Finished. Unresolved: {unresolvedCount}. Iterations count: {iterationsCount}");
             }
             else
             {
@@ -131,69 +134,80 @@ namespace SudokuSolver
 
         private void CheckAndRemoveCandidates(Cell[] cellsToCheck)
         {
-            var nonSolvedCells = cellsToCheck.Where(x => !x.IsSolved).ToList();
-            if (nonSolvedCells.Count == 0)
-                return;
+            do
+            {
+                Cell.ResetCellChanged();
 
-            var candidatesToRemove = cellsToCheck.Except(nonSolvedCells).Select(x => x.Value).ToList();
+                var nonSolvedCells = cellsToCheck.Where(x => !x.IsSolved).ToList();
+                if (nonSolvedCells.Count == 0)
+                    return;
 
-            foreach (var nonSolved in nonSolvedCells)
-                nonSolved.RemoveCandidates(candidatesToRemove);
+                var candidatesToRemove = cellsToCheck.Except(nonSolvedCells).Select(x => x.Value).ToList();
+
+                foreach (var nonSolved in nonSolvedCells)
+                    nonSolved.RemoveCandidates(candidatesToRemove);
+            }
+            while (Cell.CellChanged);
         }
 
         private void CheckForUniqueCandidate(Cell[] cellsToCheck)
         {
-            if (cellsToCheck.All(x => x.IsSolved))
-                return;
-
-            var unresolvedCells = cellsToCheck.Where(x => !x.IsSolved).ToList();
-
-            var allUniqueCandidates = unresolvedCells.SelectMany(x => x.GetCandidates)
-                .GroupBy(x => x)
-                .Select(group => new { Key = group.Key, Count = group.Count() })
-                .Where(x => x.Count == 1)
-                .ToList();
-
-            var count = allUniqueCandidates.Count;
-
-            if (count == 0)
-                return;
-
-            if (count == 1)
+            do
             {
-                var uniqueCandidate = allUniqueCandidates.First();
-                var valueToSet = uniqueCandidate.Key;
-                var cellToSet = unresolvedCells.First(x => x.GetCandidates.Contains(valueToSet));
+                Cell.ResetCellChanged();
 
-                cellToSet.SetUniqueCandidate(valueToSet);
-            }
-            else
-            {
-                var cellsWithCandidates = new Dictionary<Cell, List<byte>>();
+                if (cellsToCheck.All(x => x.IsSolved))
+                    return;
 
-                foreach (var uniqueCandidate in allUniqueCandidates)
+                var unresolvedCells = cellsToCheck.Where(x => !x.IsSolved).ToList();
+
+                var allUniqueCandidates = unresolvedCells.SelectMany(x => x.GetCandidates)
+                    .GroupBy(x => x)
+                    .Select(group => new { Key = group.Key, Count = group.Count() })
+                    .Where(x => x.Count == 1)
+                    .ToList();
+
+                var count = allUniqueCandidates.Count;
+
+                if (count == 0)
+                    return;
+
+                if (count == 1)
                 {
-                    var candidate = uniqueCandidate.Key;
-                    var cell = unresolvedCells.First(x => x.GetCandidates.Contains(candidate));
+                    var uniqueCandidate = allUniqueCandidates.First();
+                    var valueToSet = uniqueCandidate.Key;
+                    var cellToSet = unresolvedCells.First(x => x.GetCandidates.Contains(valueToSet));
 
-                    if (!cellsWithCandidates.ContainsKey(cell))
-                        cellsWithCandidates.Add(cell, new List<byte>() { candidate });
-                    else
-                        cellsWithCandidates[cell].Add(candidate);
+                    cellToSet.SetUniqueCandidate(valueToSet);
                 }
-
-                foreach (var cellWithUniqueCandidates in cellsWithCandidates)
+                else
                 {
-                    var candidates = cellWithUniqueCandidates.Value;
+                    var cellsWithCandidates = new Dictionary<Cell, List<byte>>();
 
-                    if (candidates.Count > 1)
-                        continue;
+                    foreach (var uniqueCandidate in allUniqueCandidates)
+                    {
+                        var candidate = uniqueCandidate.Key;
+                        var cell = unresolvedCells.First(x => x.GetCandidates.Contains(candidate));
 
-                    var uniqueCandidate = candidates.First();
-                    var cellToSet = cellWithUniqueCandidates.Key;
-                    cellToSet.SetUniqueCandidate(uniqueCandidate);
+                        if (!cellsWithCandidates.ContainsKey(cell))
+                            cellsWithCandidates.Add(cell, new List<byte>() { candidate });
+                        else
+                            cellsWithCandidates[cell].Add(candidate);
+                    }
+
+                    foreach (var cellWithUniqueCandidates in cellsWithCandidates)
+                    {
+                        var candidates = cellWithUniqueCandidates.Value;
+
+                        if (candidates.Count > 1)
+                            continue;
+
+                        var uniqueCandidate = candidates.First();
+                        var cellToSet = cellWithUniqueCandidates.Key;
+                        cellToSet.SetUniqueCandidate(uniqueCandidate);
+                    }
                 }
-            }
+            } while (Cell.CellChanged);
         }
 
         private int GetUnresolvedCount() =>
