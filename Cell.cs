@@ -44,17 +44,6 @@ namespace SudokuSolver
 
         public static void ResetCellChanged() =>
             CellChanged = false;
-    
-        // Debug
-        public string GetCandidatesInfo()
-        {
-            var stringBuilder = new StringBuilder();
-
-            foreach (var candidate in _candidates)
-                stringBuilder.Append($"{candidate} ");
-
-            return stringBuilder.ToString();
-        }
 
         public override string ToString() => 
             Value == 0 ? "-" : Value.ToString();
