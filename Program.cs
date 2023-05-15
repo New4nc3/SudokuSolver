@@ -4,7 +4,7 @@
     {
         public static void Main(string[] args)
         {
-            var inputFileName = "expert2";
+            var inputFileName = "expert3";
 
             Solver solver = new Solver(inputFileName);
 
