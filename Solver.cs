@@ -18,8 +18,9 @@ namespace SudokuSolver
         private readonly Cell[,] _fullGrid;
 
         private readonly StringBuilder _stringBuilder = new StringBuilder();
+        private readonly bool _printDebug;
 
-        public Solver(string inputFileNameWithoutExtension, string? outputFileName = null)
+        public Solver(string inputFileNameWithoutExtension, string? outputFileName = null, bool printProgress = true)
         {
             _inputFilePath = FileManager.GenerateInputFilePath(inputFileNameWithoutExtension);
             _outputFilePath = outputFileName ?? FileManager.GenerateOutputFilePath(inputFileNameWithoutExtension);
@@ -30,6 +31,7 @@ namespace SudokuSolver
             _fullGrid = new Cell[RowsColsCount, RowsColsCount];
 
             _rawData = FileManager.ReadDataFromFile(_inputFilePath);
+            _printDebug = printProgress;
 
             Initialize();
         }
@@ -90,12 +92,26 @@ namespace SudokuSolver
 
         public void Solve()
         {
-            int iterationsCount = 0;
-            int unresolvedCount, tempUnresolvedCount;
+            int iterationsCount, unresolvedCount;
+
+            TrySolve(out iterationsCount, out unresolvedCount);
+            
+            if (unresolvedCount > 0)
+                Console.WriteLine($"Finished. Unresolved: {unresolvedCount}. Iterations count: {iterationsCount}");
+            else
+                Console.WriteLine($"Sucessfully solved in {iterationsCount} moves!");
+
+            SaveToFile();
+        }
+
+        private bool TrySolve(out int iterationsCount, out int unresolvedCount)
+        {
+            int tempUnresolvedCount;
+            iterationsCount = 0;
 
             do
             {
-                unresolvedCount = GetUnresolvedCount();
+                tempUnresolvedCount = GetUnresolvedCount();
 
                 _rows.ForEach(x => CheckAndRemoveCandidates(x));
                 _cols.ForEach(x => CheckAndRemoveCandidates(x));
@@ -107,29 +123,14 @@ namespace SudokuSolver
 
                 ++iterationsCount;
 
-                Console.WriteLine(this);
+                if (_printDebug)
+                    Console.WriteLine(this);
 
-                tempUnresolvedCount = GetUnresolvedCount();
+                unresolvedCount = GetUnresolvedCount();
             }
-            while (tempUnresolvedCount > 0 && tempUnresolvedCount != unresolvedCount);
+            while (unresolvedCount > 0 && unresolvedCount != tempUnresolvedCount);
 
-            unresolvedCount = GetUnresolvedCount();
-            if (unresolvedCount > 0)
-            {
-                Console.WriteLine($"Finished. Unresolved: {unresolvedCount}. Iterations count: {iterationsCount}");
-            }
-            else
-            {
-                Console.WriteLine($"Sucessfully solved in {iterationsCount} moves!");
-            }
-
-            if (FileManager.WriteDataToFile(_outputFilePath, this.ToString()))
-            {
-                Console.WriteLine($"Successfully saved to \"{_outputFilePath}\"");
-            }
-
-            Console.WriteLine("\nPress any key to exit . . .");
-            Console.ReadKey(true);
+            return unresolvedCount == 0;
         }
 
         private void CheckAndRemoveCandidates(Cell[] cellsToCheck)
@@ -212,6 +213,12 @@ namespace SudokuSolver
 
         private int GetUnresolvedCount() =>
             _rows.Sum(x => x.Count(x => !x.IsSolved));
+
+        private void SaveToFile()
+        {
+            if (FileManager.WriteDataToFile(_outputFilePath, this.ToString()))
+                Console.WriteLine($"Successfully saved to \"{_outputFilePath}\"");
+        }
 
         public override string ToString()
         {
